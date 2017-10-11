@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -18,7 +18,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -204,8 +204,11 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
 
         predecessors = []
 
+
+        # Initialize an empty priority queue
         pq = util.PriorityQueue()
 
+        # For each non-terminal state s...
         for state in self.mdp.getStates():
             if self.mdp.isTerminal(state):
                 self.values[state] = 0.0
@@ -215,13 +218,21 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
                     value = self.computeQValueFromValues(state, action)
                     if (value > maxValue1):
                         maxValue1 = value
+                # Find the absolute value of the difference between the
+                # current value of s in self.values and the highest Q-
+                # value across all possible actions from s.
                 diff = abs(self.values[state] - maxValue1)
+                # Push s to priority queue with priority -diff.
                 pq.push(state, -diff)
+        # For iteration in 0, 1, 2, ..., self.iterations - 1, do:
         for i in range(self.iterations):
+            # If the priority queue is empty, terminate.
             if pq.isEmpty():
                 break
             else:
+                # Pop a state s off the priority queue.
                 newState = pq.pop()
+                # Update s's value
                 if self.mdp.isTerminal(newState):
                     self.values[newState] = 0.0
                 else:
@@ -231,6 +242,7 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
                         if (value > maxValue2):
                             maxValue2 = value
                     self.values[newState] = maxValue2
+                # For each predecessor of s...
                 predecessorSet = self.findPredecessors(newState)
                 for predecessor in predecessorSet:
                     maxValue3 = float('-inf')
@@ -238,8 +250,11 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
                         value = self.computeQValueFromValues(predecessor, action)
                         if (value > maxValue3):
                             maxValue3 = value
+                    # Find the absolute value of the difference between...
                     diff = abs(self.values[predecessor] - maxValue3)
-                    pq.push(predecessor, -diff)
+                    # If diff > theta, push p to priority queue with priority -diff
+                    if (diff > self.theta):
+                        pq.push(predecessor, -diff)
 
     def findPredecessors(self, state):
 
