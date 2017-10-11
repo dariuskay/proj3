@@ -187,3 +187,66 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
 
+        # for i in range(self.iterations):
+        #     nextValues = util.Counter()
+        #     for state in self.mdp.getStates():
+        #         if self.mdp.isTerminal(state):
+        #             nextValues[state] = 0.0
+        #         else:
+        #             maxValue = float('-inf')
+        #             for action in self.mdp.getPossibleActions(state):
+        #                 value = self.computeQValueFromValues(state, action)
+        #                 if (value > maxValue):
+        #                     maxValue = value
+        #                     nextValues[state] = maxValue
+        #
+        #     self.values = nextValues
+
+        predecessors = []
+
+        pq = util.PriorityQueue()
+
+        for state in self.mdp.getStates():
+            if self.mdp.isTerminal(state):
+                self.values[state] = 0.0
+            else:
+                maxValue1 = float('-inf')
+                for action in self.mdp.getPossibleActions(state):
+                    value = self.computeQValueFromValues(state, action)
+                    if (value > maxValue1):
+                        maxValue1 = value
+                diff = abs(self.values[state] - maxValue1)
+                pq.push(state, -diff)
+        for i in range(self.iterations):
+            if pq.isEmpty():
+                break
+            else:
+                newState = pq.pop()
+                if self.mdp.isTerminal(newState):
+                    self.values[newState] = 0.0
+                else:
+                    maxValue2 = float('-inf')
+                    for action in self.mdp.getPossibleActions(newState):
+                        value = self.computeQValueFromValues(newState, action)
+                        if (value > maxValue2):
+                            maxValue2 = value
+                    self.values[newState] = maxValue2
+                predecessorSet = self.findPredecessors(newState)
+                for predecessor in predecessorSet:
+                    maxValue3 = float('-inf')
+                    for action in self.mdp.getPossibleActions(predecessor):
+                        value = self.computeQValueFromValues(predecessor, action)
+                        if (value > maxValue3):
+                            maxValue3 = value
+                    diff = abs(self.values[predecessor] - maxValue3)
+                    pq.push(predecessor, -diff)
+
+    def findPredecessors(self, state):
+
+        predecessors = set()
+        for s in self.mdp.getStates():
+            for a in self.mdp.getPossibleActions(s):
+                successors = self.mdp.getTransitionStatesAndProbs(s, a)
+                if (s in successors) and (successors[s][1] > 0):
+                    predecessors.add(s)
+        return predecessors
